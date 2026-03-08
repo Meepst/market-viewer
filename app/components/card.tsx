@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   AreaChart,
@@ -58,7 +58,7 @@ export default function StockCard({
           backdropFilter: "blur(16px)",
           borderRadius: compact ? 10 : 16,
           padding: layout.cardPadding,
-          border: "1px solid ${hovered ? theme.borderHover : theme.border}",
+          border: `1px solid ${hovered ? theme.borderHover : theme.border}`,
           cursor: "pointer",
           overflow: "hidden",
           height: "100%",

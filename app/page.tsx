@@ -23,12 +23,17 @@ async function DashboardLoader() {
     "GOOGL",
     "MA",
   ];
+
+  // Fetch in batches of 3 to respect AlphaVantage rate limits
+  // while still being faster than fully sequential
+  const BATCH_SIZE = 3;
   const cards: Card[] = [];
 
-  for (const symbol of symbols) {
-    const card = await getCard(symbol);
-    if (card) {
-      cards.push(card);
+  for (let i = 0; i < symbols.length; i += BATCH_SIZE) {
+    const batch = symbols.slice(i, i + BATCH_SIZE);
+    const results = await Promise.all(batch.map((s) => getCard(s)));
+    for (const card of results) {
+      if (card) cards.push(card);
     }
   }
 

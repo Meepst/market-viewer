@@ -16,6 +16,8 @@ import {
 import { Card, StockDay } from "../../types/stock";
 import { themes, Theme } from "../../dashboard/dashboardClient";
 import { CompanyLogo } from "../../components/companyLogo";
+import { ThemeToggle } from "../../components/themeToggle";
+import { NoiseOverlay } from "../../components/noiseOverlay";
 
 function fmt(value: string | undefined): string {
   if (!value || value === "None" || value === "-") return "N/A";
@@ -30,6 +32,13 @@ function fmtMarketCap(value: string | undefined): string {
   if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
   if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
   return `$${num.toLocaleString()}`;
+}
+
+function fmtVolume(value: number): string {
+  if (value >= 1e9) return `${(value / 1e9).toFixed(2)}B`;
+  if (value >= 1e6) return `${(value / 1e6).toFixed(2)}M`;
+  if (value >= 1e3) return `${(value / 1e3).toFixed(1)}K`;
+  return value.toLocaleString();
 }
 
 function calcPctChange(current: StockDay, previous: StockDay | null): string {
@@ -47,87 +56,6 @@ function useIsMobile(breakpoint = 640) {
     return () => window.removeEventListener("resize", check);
   }, [breakpoint]);
   return isMobile;
-}
-
-function ThemeToggle({
-  themeKey,
-  onChange,
-  theme,
-  mobile = false,
-}: {
-  themeKey: string;
-  onChange: (key: string) => void;
-  theme: Theme;
-  mobile?: boolean;
-}) {
-  const isDark = themeKey === "midnight";
-  return (
-    <button
-      onClick={() => onChange(isDark ? "arctic" : "midnight")}
-      aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: mobile ? 6 : 8,
-        padding: mobile ? "4px 10px" : "6px 14px",
-        borderRadius: 99,
-        border: `1px solid ${theme.border}`,
-        background: theme.bgCard,
-        color: theme.textSecondary,
-        cursor: "pointer",
-        fontFamily: theme.font,
-        fontSize: mobile ? 10 : 12,
-        letterSpacing: "0.04em",
-        transition: "all 0.3s ease",
-        backdropFilter: "blur(8px)",
-        flexShrink: 0,
-      }}
-    >
-      <div
-        style={{
-          width: mobile ? 28 : 36,
-          height: mobile ? 16 : 20,
-          borderRadius: mobile ? 8 : 10,
-          background: theme.accent,
-          position: "relative",
-          transition: "background 0.3s",
-          flexShrink: 0,
-        }}
-      >
-        <div
-          style={{
-            width: mobile ? 12 : 16,
-            height: mobile ? 12 : 16,
-            borderRadius: "50%",
-            background: "#fff",
-            position: "absolute",
-            top: 2,
-            left: isDark ? 2 : mobile ? 14 : 18,
-            transition: "left 0.3s cubic-bezier(0.4,0,0.2,1)",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
-          }}
-        />
-      </div>
-      {!mobile && <span>{isDark ? "Dark" : "Light"}</span>}
-    </button>
-  );
-}
-
-function NoiseOverlay() {
-  return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        pointerEvents: "none",
-        zIndex: 1,
-        opacity: 0.03,
-        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-        backgroundRepeat: "repeat",
-        backgroundSize: "128px 128px",
-      }}
-    />
-  );
 }
 
 export function StockDetailClient({ card }: { card: Card }) {
@@ -274,7 +202,7 @@ export function StockDetailClient({ card }: { card: Card }) {
             </Link>
             <ThemeToggle
               themeKey={themeKey}
-              onChange={setThemeKey}
+              onChangeAction={setThemeKey}
               theme={theme}
               mobile={mobile}
             />
@@ -548,12 +476,12 @@ export function StockDetailClient({ card }: { card: Card }) {
                         | readonly (number | string)[]
                         | undefined,
                     ) => {
-                      if (val == null) return ["$0.00", "Close"];
+                      if (val == null) return ["0", "Volume"];
 
                       const v = Array.isArray(val) ? val[0] : val;
                       const num = typeof v === "number" ? v : Number(v);
 
-                      return [`$${num.toFixed(2)}`, "Close"];
+                      return [fmtVolume(num), "Volume"];
                     }}
                     labelStyle={{ color: theme.textSecondary }}
                   />
